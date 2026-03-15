@@ -1,0 +1,82 @@
+# 量化因子工厂配置文件
+
+# 数据配置
+data:
+  # 数据目录
+  data_dir: "data"
+  cache_dir: "cache"
+
+  # 主要数据源: tushare, akshare, baostock
+  primary_provider: "tushare"
+
+  # Tushare配置（需要在.env文件中设置TUSHARE_TOKEN）
+  # 获取token: https://tushare.pro/register
+  tushare_pro_api: "http://api.tushare.pro"
+
+  # AKShare配置
+  akshare_enabled: true
+
+  # Baostock配置
+  baostock_enabled: true
+
+  # 缓存配置
+  enable_cache: true
+  cache_days: 7
+
+  # 自动更新配置
+  auto_update: false
+  update_time: "18:00"
+
+  # 存储格式: hdf5 或 parquet
+  storage_format: "hdf5"
+
+# 因子配置
+factor:
+  # 因子目录
+  factor_dir: "factors"
+
+  # 并行计算配置
+  parallel: true
+  n_workers: -1  # -1表示使用所有CPU核心
+
+  # 因子数据库路径
+  factor_db_path: "storage/factors.h5"
+
+  # 因子版本控制
+  enable_versioning: true
+
+# 回测配置
+backtest:
+  # 初始资金
+  initial_capital: 1000000.0
+
+  # 手续费配置（万三）
+  commission_rate: 0.0003
+  min_commission: 5.0
+
+  # 滑点配置（万分之一）
+  slippage_rate: 0.0001
+
+  # A股T+1交易规则
+  t_plus_one: true
+
+  # 报告目录
+  report_dir: "reports"
+
+  # 基准指数（沪深300）
+  benchmark: "000300.SH"
+
+# 日志配置
+log:
+  # 日志级别: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+
+  # 日志目录
+  log_dir: "logs"
+
+  # 日志文件
+  log_file: "factor_factory.log"
+
+  # 日志轮转配置
+  rotation: "500 MB"
+  retention: "7 days"

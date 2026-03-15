@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python tests/test_config.py)",
+      "Bash(python3 tests/test_config.py)",
+      "Bash(py tests/test_config.py)"
+    ]
+  }
+}
