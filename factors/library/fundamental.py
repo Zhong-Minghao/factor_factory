@@ -164,7 +164,7 @@ class LogMarketCap(FundamentalFactor):
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
         """计算对数市值"""
-        mc_factor = MARKET_CAP()
+        mc_factor = MarketCap()
 
         market_cap = mc_factor.compute(data)
 

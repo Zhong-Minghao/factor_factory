@@ -50,5 +50,10 @@ def test_settings():
     print("=" * 60)
 
 
+def test_config():
+    """测试配置（别名函数）"""
+    test_settings()
+
+
 if __name__ == "__main__":
     test_settings()

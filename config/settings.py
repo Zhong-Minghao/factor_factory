@@ -193,13 +193,13 @@ class Settings:
 
     def get_data_path(self, *paths: str) -> Path:
         """获取数据目录下的文件路径"""
-        return self.project_root / self.data.data_dir / *paths
+        return (self.project_root / self.data.data_dir).joinpath(*paths)
 
     def get_cache_path(self, *paths: str) -> Path:
         """获取缓存目录下的文件路径"""
         cache_dir = self.project_root / self.data.cache_dir
         cache_dir.mkdir(parents=True, exist_ok=True)
-        return cache_dir / *paths
+        return cache_dir.joinpath(*paths)
 
     def get_factor_db_path(self) -> Path:
         """获取因子数据库路径"""
@@ -209,13 +209,13 @@ class Settings:
         """获取报告目录下的文件路径"""
         report_dir = self.project_root / self.backtest.report_dir
         report_dir.mkdir(parents=True, exist_ok=True)
-        return report_dir / *paths
+        return report_dir.joinpath(*paths)
 
     def get_log_path(self, *paths: str) -> Path:
         """获取日志目录下的文件路径"""
         log_dir = self.project_root / self.log.log_dir
         log_dir.mkdir(parents=True, exist_ok=True)
-        return log_dir / *paths
+        return log_dir.joinpath(*paths)
 
 
 # 全局配置实例

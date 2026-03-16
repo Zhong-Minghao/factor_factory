@@ -57,8 +57,8 @@ from .library.fundamental import (
     PE,
     PB,
     PS,
-    MARKET_CAP,
-    CIRCULATING_CAP,
+    MarketCap,
+    CirculatingCap,
     EP,
     BP,
     LogMarketCap,
@@ -112,8 +112,8 @@ __all__ = [
     "PE",
     "PB",
     "PS",
-    "MARKET_CAP",
-    "CIRCULATING_CAP",
+    "MarketCap",
+    "CirculatingCap",
     "EP",
     "BP",
     "LogMarketCap",
@@ -150,8 +150,8 @@ factor_registry.register_class(VolumeOscillator, "VOLUME_OSCILLATOR")
 factor_registry.register_class(PE, "PE")
 factor_registry.register_class(PB, "PB")
 factor_registry.register_class(PS, "PS")
-factor_registry.register_class(MARKET_CAP, "MARKET_CAP")
-factor_registry.register_class(CIRCULATING_CAP, "CIRCULATING_CAP")
+factor_registry.register_class(MarketCap, "MARKET_CAP")
+factor_registry.register_class(CirculatingCap, "CIRCULATING_CAP")
 factor_registry.register_class(EP, "EP")
 factor_registry.register_class(BP, "BP")
 factor_registry.register_class(LogMarketCap, "LOG_MARKET_CAP")
