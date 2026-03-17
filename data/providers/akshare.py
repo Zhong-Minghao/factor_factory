@@ -61,7 +61,8 @@ class AKShareSource(DataSourceBase):
         Returns:
             是否已连接
         """
-        return self._connected
+        # 同时检查状态标志和API对象
+        return self._connected and self.api is not None
 
     def _rate_limit(self):
         """请求频率限制"""
