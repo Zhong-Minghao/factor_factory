@@ -33,6 +33,12 @@ class DataConfig:
     # Baostock配置
     baostock_enabled: bool = True
 
+    # Wind配置
+    wind_enabled: bool = False  # 默认关闭，需要Wind终端
+    wind_account: Optional[str] = None  # Wind账号（可选）
+    wind_password: Optional[str] = None  # Wind密码（可选）
+    wind_server: str = "localhost"  # Wind服务器地址
+
     # 缓存配置
     enable_cache: bool = True
     cache_days: int = 7  # 缓存天数

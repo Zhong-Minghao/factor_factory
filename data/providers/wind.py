@@ -653,3 +653,53 @@ class WindSource(DataSourceBase):
             raise
         except Exception as e:
             raise DataSourceError(f"获取 {ts_code} 资金流向失败: {str(e)}")
+
+    @require_connection
+    def get_trading_days_tdays(
+        self,
+        start_date: str,
+        end_date: str,
+        weekdays_only: bool = False
+    ) -> List:
+        """
+        使用w.tdays获取交易日历
+
+        Args:
+            start_date: 开始日期 (YYYY-MM-DD)
+            end_date: 结束日期 (YYYY-MM-DD)
+            weekdays_only: 是否仅返回工作日（不含节假日）
+
+        Returns:
+            交易日期列表 (datetime.date对象)
+
+        Example:
+            # 获取交易日
+            dates = wind.get_trading_days_tdays("2026-02-19", "2026-03-19")
+
+            # 获取工作日
+            dates = wind.get_trading_days_tdays("2026-02-20", "2026-03-20", weekdays_only=True)
+        """
+        self._rate_limit()
+
+        try:
+            # 转换日期格式为Wind格式
+            wind_start = start_date.replace("-", "")
+            wind_end = end_date.replace("-", "")
+
+            # 调用w.tdays
+            if weekdays_only:
+                result = self.api.tdays(wind_start, wind_end, "Days=Weekdays")
+            else:
+                result = self.api.tdays(wind_start, wind_end)
+
+            self._check_error(result)
+
+            # WindPy已经将Times转换为datetime.date对象列表
+            # 直接返回即可
+            if result.Times:
+                return list(result.Times)
+            else:
+                return []
+
+        except Exception as e:
+            raise DataSourceError(f"获取交易日历失败: {str(e)}")

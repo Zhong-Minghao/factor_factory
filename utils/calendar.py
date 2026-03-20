@@ -5,7 +5,6 @@
 import pandas as pd
 from datetime import datetime, date
 from typing import List, Optional, Set
-from pathlib import Path
 import pickle
 
 from config.settings import get_settings
@@ -22,6 +21,7 @@ class TradingCalendar:
         """初始化交易日历"""
         self.settings = get_settings()
         self._trading_days: Optional[Set[date]] = None
+        self._wind_available = None  # Wind可用性标记: None=未测试, True=可用, False=不可用
         self._load_from_cache()
 
     def _load_from_cache(self):
@@ -49,43 +49,109 @@ class TradingCalendar:
         except Exception:
             pass
 
-    def update_trading_days(self, start_date: str, end_date: str):
+    def update_trading_days(self, start_date: str, end_date: str) -> bool:
         """
-        更新交易日历数据
+        更新交易日历数据（支持Wind API降级）
+
+        优先级：Wind API > 工作日判断
+
+        Args:
+            start_date: 开始日期 (YYYY-MM-DD)
+            end_date: 结束日期 (YYYY-MM-DD)
+
+        Returns:
+            是否成功从Wind获取数据
+        """
+        # 1. 尝试使用Wind API
+        if self._try_update_from_wind(start_date, end_date):
+            return True
+
+        # 2. 降级到简单工作日判断
+        self._fallback_to_weekdays(start_date, end_date)
+        return False
+
+    def _try_update_from_wind(self, start_date: str, end_date: str) -> bool:
+        """
+        尝试从Wind API更新交易日历
+
+        Args:
+            start_date: 开始日期 (YYYY-MM-DD)
+            end_date: 结束日期 (YYYY-MM-DD)
+
+        Returns:
+            是否成功
+        """
+        # 检查配置
+        if not self.settings.data.wind_enabled:
+            return False
+
+        # 避免重复测试连接
+        if self._wind_available is False:
+            return False
+
+        try:
+            from data.providers import WindSource
+
+            # 使用上下文管理器自动处理连接
+            with WindSource() as wind:
+                # 调用tdays API获取交易日
+                trading_days_list = wind.get_trading_days_tdays(start_date, end_date)
+
+                if not trading_days_list:
+                    return False
+
+                # 转换为集合
+                trading_days = set(trading_days_list)
+
+                # 更新交易日历
+                if self._trading_days is None:
+                    self._trading_days = set()
+                self._trading_days.update(trading_days)
+
+                # 保存缓存
+                self._save_to_cache()
+
+                # 标记Wind可用
+                self._wind_available = True
+                return True
+
+        except ImportError:
+            # WindPy未安装
+            self._wind_available = False
+            return False
+        except Exception:
+            # Wind API调用失败
+            self._wind_available = False
+            return False
+
+    def _fallback_to_weekdays(self, start_date: str, end_date: str):
+        """
+        降级到简单工作日判断
+
+        生成工作日（周一到周五）作为交易日
+        注意：此方法不考虑节假日，仅作为兜底方案
 
         Args:
             start_date: 开始日期 (YYYY-MM-DD)
             end_date: 结束日期 (YYYY-MM-DD)
         """
         try:
-            import akshare as ak
-
-            # 获取交易日历
-            df = ak.tool_trade_date_hist_sina()
-
-            # 转换为日期类型
-            df["trade_date"] = pd.to_datetime(df["trade_date"]).dt.date
-
-            # 筛选日期范围
-            start = pd.to_datetime(start_date).date()
-            end = pd.to_datetime(end_date).date()
-
-            # 过滤日期范围
-            mask = (df["trade_date"] >= start) & (df["trade_date"] <= end)
-            trading_days = set(df.loc[mask, "trade_date"])
+            # 生成工作日
+            date_range = pd.date_range(start=start_date, end=end_date, freq="B")
+            trading_days = {d.date() for d in date_range}
 
             # 更新交易日历
             if self._trading_days is None:
                 self._trading_days = set()
             self._trading_days.update(trading_days)
 
-            # 保存到缓存
+            # 保存缓存
             self._save_to_cache()
 
-        except ImportError:
-            raise ImportError("请安装akshare: pip install akshare")
-        except Exception as e:
-            raise RuntimeError(f"更新交易日历失败: {str(e)}")
+        except Exception:
+            # 如果连工作日生成都失败，初始化为空集合
+            if self._trading_days is None:
+                self._trading_days = set()
 
     def is_trading_day(self, date_obj: date) -> bool:
         """
