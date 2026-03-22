@@ -13,6 +13,8 @@ from .base import Factor, FactorValidator
 from .registry import factor_registry
 from config.settings import get_settings
 from data.store import DataStore
+from storage.factor_store import FactorStore
+from storage.metadata import FactorMetadata
 
 
 class FactorEngine:
@@ -26,15 +28,21 @@ class FactorEngine:
     - 批量计算
     """
 
-    def __init__(self, storage: Optional[DataStore] = None):
+    def __init__(
+        self,
+        storage: Optional[DataStore] = None,
+        factor_store: Optional[FactorStore] = None,
+    ):
         """
         初始化因子引擎
 
         Args:
-            storage: 数据存储实例
+            storage: 数据存储实例（用于加载股票数据）
+            factor_store: 因子存储实例（用于保存/加载因子值）
         """
         self.settings = get_settings()
         self.storage = storage or DataStore()
+        self.factor_store = factor_store or FactorStore()
         self.validator = FactorValidator()
 
         # 计算配置
@@ -300,53 +308,100 @@ class FactorEngine:
         self,
         factor_name: str,
         factor_values: pd.DataFrame,
-        date: Optional[str] = None,
+        params: Optional[Dict[str, Any]] = None,
+        metadata: Optional[FactorMetadata] = None,
+        overwrite: bool = True,
     ):
         """
-        保存因子值
+        保存因子值到HDF5存储
 
         Args:
-            factor_name: 因子名称
-            factor_values: 因子值DataFrame
-            date: 日期（可选）
+            factor_name: 因子名称（如：MA, RSI）
+            factor_values: 因子值DataFrame（宽表格式）
+                           index: trade_date
+                           columns: ts_code
+                           values: factor_value
+            params: 因子参数（如：{"window": 20}）
+            metadata: 因子元数据，如果为None则自动创建
+            overwrite: 是否覆盖已有数据，默认True
+
+        Raises:
+            ValueError: 如果数据格式不正确
         """
-        # TODO: 实现因子值保存到数据库
-        # 这个功能将在storage模块中实现
-        pass
+        # 验证数据格式
+        if not isinstance(factor_values, pd.DataFrame):
+            raise ValueError("factor_values必须是DataFrame（宽表格式）")
+
+        if factor_values.empty:
+            raise ValueError("factor_values不能为空")
+
+        # 保存到FactorStore
+        self.factor_store.save_factor(
+            factor_name=factor_name,
+            factor_data=factor_values,
+            params=params,
+            metadata=metadata,
+            overwrite=overwrite,
+        )
 
     def load_factor_values(
         self,
         factor_name: str,
+        params: Optional[Dict[str, Any]] = None,
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
+        stock_codes: Optional[List[str]] = None,
     ) -> pd.DataFrame:
         """
-        加载因子值
+        从HDF5存储加载因子值
 
         Args:
             factor_name: 因子名称
-            start_date: 开始日期
-            end_date: 结束日期
+            params: 因子参数（如：{"window": 20}）
+            start_date: 开始日期（YYYY-MM-DD）
+            end_date: 结束日期（YYYY-MM-DD）
+            stock_codes: 股票代码列表，如果为None则返回所有股票
 
         Returns:
-            因子值DataFrame
+            因子值DataFrame（宽表格式）
+            index: trade_date
+            columns: ts_code
+            values: factor_value
         """
-        # TODO: 实现从数据库加载因子值
-        # 这个功能将在storage模块中实现
-        return pd.DataFrame()
+        return self.factor_store.load_factor(
+            factor_name=factor_name,
+            params=params,
+            start_date=start_date,
+            end_date=end_date,
+            stock_codes=stock_codes,
+        )
 
     def get_dependency_order(self, factor_names: List[str]) -> List[str]:
         """
         获取因子计算顺序（考虑依赖关系）
 
+        使用拓扑排序算法处理因子依赖关系
+
         Args:
             factor_names: 因子名称列表
 
         Returns:
-            排序后的因子名称列表
+            排序后的因子名称列表（依赖因子在前）
+
+        Note:
+            当前版本为简单实现，直接返回原列表
+            TODO: 实现完整的拓扑排序算法
+                  参考：https://en.wikipedia.org/wiki/Topological_sorting
+
+        Example:
+            如果因子B依赖因子A，则返回 [A, B]
         """
-        # TODO: 实现拓扑排序，考虑因子依赖关系
-        # 简单版本直接返回原列表
+        # TODO: 实现完整的拓扑排序
+        # 1. 构建依赖图
+        # 2. 使用Kahn算法或DFS算法进行拓扑排序
+        # 3. 检测循环依赖
+
+        # 简单版本：直接返回原列表
         return factor_names
 
     def validate_factor_dependencies(self, factor_name: str) -> bool:
