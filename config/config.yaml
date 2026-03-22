@@ -7,7 +7,7 @@ data:
   cache_dir: "cache"
 
   # 主要数据源: tushare, akshare, baostock
-  primary_provider: "tushare"
+  primary_provider: "wind"
 
   # Tushare配置（需要在.env文件中设置TUSHARE_TOKEN）
   # 获取token: https://tushare.pro/register

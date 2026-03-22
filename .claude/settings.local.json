@@ -3,7 +3,10 @@
     "allow": [
       "Bash(python tests/test_config.py)",
       "Bash(python3 tests/test_config.py)",
-      "Bash(py tests/test_config.py)"
+      "Bash(py tests/test_config.py)",
+      "Read(//d d:/0信银/**)",
+      "Bash(python examples/registry_guide.py)",
+      "Bash(python \"d:\\\\0信银\\\\因子工厂\\\\examples\\\\registry_guide.py\")"
     ]
   }
 }

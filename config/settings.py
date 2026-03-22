@@ -15,13 +15,13 @@ load_dotenv()
 
 @dataclass
 class DataConfig:
-    """数据配置"""
+    """示例（默认）数据配置"""
     # 数据目录
     data_dir: str = "data"
     cache_dir: str = "cache"
 
     # 数据源配置
-    primary_provider: str = "tushare"  # 默认数据源
+    primary_provider: str = "wind"  # 默认数据源
 
     # Tushare配置
     tushare_token: Optional[str] = None
@@ -34,7 +34,7 @@ class DataConfig:
     baostock_enabled: bool = True
 
     # Wind配置
-    wind_enabled: bool = False  # 默认关闭，需要Wind终端
+    wind_enabled: bool = True  # 默认开启，需要Wind终端
     wind_account: Optional[str] = None  # Wind账号（可选）
     wind_password: Optional[str] = None  # Wind密码（可选）
     wind_server: str = "localhost"  # Wind服务器地址
