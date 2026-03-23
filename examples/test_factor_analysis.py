@@ -3,9 +3,15 @@
 测试Phase 1（因子存储）和Phase 2（因子分析）的所有功能
 """
 import sys
+import io
 from pathlib import Path
 import pandas as pd
 import numpy as np
+
+# 设置UTF-8编码以支持Windows控制台显示emoji
+# if sys.platform == 'win32':
+#     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+#     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent
@@ -14,7 +20,7 @@ sys.path.insert(0, str(project_root))
 
 def create_test_data(
     num_stocks: int = 100,
-    num_days: int = 252,
+    num_days: int = 300,  # 增加到300天以支持月度调仓
     start_date: str = "2024-01-01",
 ) -> tuple:
     """
@@ -31,8 +37,8 @@ def create_test_data(
     # 生成日期序列（只用工作日）
     dates = pd.date_range(start=start_date, periods=num_days, freq="B")  # B = 工作日
 
-    # 生成股票代码
-    stock_codes = [f"{str(i).zfill(6)}.SZ" for i in range(1, num_stocks + 1)]
+    # 生成股票代码（使用下划线代替点号以避免HDF5警告）
+    stock_codes = [f"{str(i).zfill(6)}_SZ" for i in range(1, num_stocks + 1)]
 
     # 生成价格数据（随机游走）
     np.random.seed(42)
@@ -77,7 +83,7 @@ def test_phase1_factor_storage():
 
     # 创建测试数据
     print("\n📊 创建测试数据...")
-    factor_data, price_data = create_test_data(num_stocks=50, num_days=100)
+    factor_data, price_data = create_test_data(num_stocks=50, num_days=300)
     print(f"  因子数据: {factor_data.shape}")
     print(f"  价格数据: {price_data.shape}")
 

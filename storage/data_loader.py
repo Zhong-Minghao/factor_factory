@@ -2,7 +2,7 @@
 智能数据加载器
 支持自动fallback、内存监控、批量加载等功能
 """
-from typing import List, Dict, Optional, Union, Callable
+from typing import List, Dict, Optional, Union, Callable, Any
 import pandas as pd
 import numpy as np
 from functools import lru_cache

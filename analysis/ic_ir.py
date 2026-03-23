@@ -173,12 +173,15 @@ class ICAnalyzer:
             trading_days = self.calendar.get_trading_days(start_str, end_str)
 
             # 找到start_date之后的所有交易日
-            future_days = [d for d in trading_days if d > start_date]
+            # 将start_date转换为date对象进行比较
+            start_date_obj = start_date.date() if isinstance(start_date, pd.Timestamp) else start_date
+            future_days = [d for d in trading_days if d > start_date_obj]
 
             if len(future_days) < n_days:
                 return None
 
-            return future_days[:n_days]
+            # 返回Timestamp对象列表以保持一致性
+            return [pd.Timestamp(d) for d in future_days[:n_days]]
 
         except Exception as e:
             warnings.warn(f"获取交易日失败: {e}")

@@ -68,18 +68,23 @@ class LayerBacktest:
         # 获取交易日历
         trading_days = self.calendar.get_trading_days(start_date, end_date)
 
+        # 确保交易日历已更新
+        if len(trading_days) == 0:
+            self.calendar.update_trading_days(start_date, end_date)
+            trading_days = self.calendar.get_trading_days(start_date, end_date)
+
         if self.rebalance_freq == "monthly":
             # 月度调仓：每月最后一个交易日
             rebalance_dates = []
             for i, date in enumerate(trading_days):
                 # 检查是否是月末
                 if i == len(trading_days) - 1:
-                    rebalance_dates.append(date)
+                    rebalance_dates.append(pd.Timestamp(date))
                 else:
                     next_date = trading_days[i + 1]
                     # 如果下个月不同，则当前是月末
                     if date.month != next_date.month:
-                        rebalance_dates.append(date)
+                        rebalance_dates.append(pd.Timestamp(date))
 
         elif self.rebalance_freq == "weekly":
             # 周度调仓：每周最后一个交易日（周五）
@@ -87,18 +92,18 @@ class LayerBacktest:
             for i, date in enumerate(trading_days):
                 # 周五（weekday=4）
                 if date.weekday() == 4:
-                    rebalance_dates.append(date)
+                    rebalance_dates.append(pd.Timestamp(date))
 
                 # 或者最后一个交易日
                 if i == len(trading_days) - 1:
                     if date not in rebalance_dates:
-                        rebalance_dates.append(date)
+                        rebalance_dates.append(pd.Timestamp(date))
                 else:
                     next_date = trading_days[i + 1]
                     # 如果下周不同，则当前是周末
                     if date.strftime("%Y-%W") != next_date.strftime("%Y-%W"):
                         if date not in rebalance_dates:
-                            rebalance_dates.append(date)
+                            rebalance_dates.append(pd.Timestamp(date))
 
         else:
             raise ValueError(f"未知的调仓频率: {self.rebalance_freq}")
@@ -267,7 +272,7 @@ class LayerBacktest:
         rebalance_dates = self._get_rebalance_dates(start_date, end_date)
 
         if len(rebalance_dates) < 2:
-            raise ValueError(f"调仓日期不足: 只找到{len(rebalance_dates)}个")
+            raise ValueError(f"调仓日期不足: 只找到{len(rebalance_dates)}个，日期范围: {start_date} 到 {end_date}")
 
         # 初始化结果
         layer_returns_list = []
