@@ -14,22 +14,16 @@ class FactorMetadata:
     """
     因子元数据类
 
-    存储因子的描述性信息，包括参数、创建时间等
+    存储因子的描述性信息，包括参数、统计数据等
     """
 
     # 基本信息
     factor_name: str  # 因子名称
     category: str  # 因子类别（technical/momentum/volume/fundamental）
     description: str  # 因子描述
-    author: str  # 作者
-    version: str  # 版本号
 
     # 参数信息
     params: Dict[str, Any] = field(default_factory=dict)  # 因子参数
-
-    # 时间信息
-    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
 
     # 数据信息
     start_date: Optional[str] = None  # 数据开始日期
@@ -60,6 +54,8 @@ class FactorMetadata:
         Returns:
             FactorMetadata实例
         """
+        # 移除已废弃的字段（兼容旧数据）
+        data = {k: v for k, v in data.items() if k not in ['author', 'version', 'created_at', 'updated_at']}
         return cls(**data)
 
     def to_json(self) -> str:
@@ -135,7 +131,6 @@ class FactorMetadata:
         return (
             f"FactorMetadata(name={self.factor_name}, "
             f"category={self.category}, "
-            f"version={self.version}, "
             f"stocks={self.num_stocks}, "
             f"records={self.num_records})"
         )

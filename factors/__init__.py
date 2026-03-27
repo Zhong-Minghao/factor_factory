@@ -10,7 +10,6 @@ from .base import (
     MomentumFactor,
     VolumeFactor,
     FundamentalFactor,
-    FactorCalculator,
     FactorValidator,
 )
 
@@ -71,7 +70,6 @@ __all__ = [
     "MomentumFactor",
     "VolumeFactor",
     "FundamentalFactor",
-    "FactorCalculator",
     "FactorValidator",
     # 注册表
     "FactorRegistry",

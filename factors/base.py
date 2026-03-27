@@ -20,8 +20,6 @@ class Factor(ABC):
     # 因子元数据（子类需要覆盖）
     name: str = ""  # 因子名称，唯一标识符
     description: str = ""  # 因子描述
-    author: str = ""  # 作者
-    version: str = "1.0.0"  # 版本号
     category: str = ""  # 因子类别：technical, momentum, volume, fundamental等
     dependencies: List[str] = []  # 依赖的其他因子
 
@@ -99,8 +97,6 @@ class Factor(ABC):
         return {
             "name": self.name,
             "description": self.description,
-            "author": self.author,
-            "version": self.version,
             "category": self.category,
             "dependencies": self.dependencies,
             "params": self.params,
@@ -108,7 +104,7 @@ class Factor(ABC):
 
     def __repr__(self) -> str:
         """字符串表示"""
-        return f"{self.__class__.__name__}(name={self.name}, version={self.version})"
+        return f"{self.__class__.__name__}(name={self.name})"
 
 
 class TechnicalFactor(Factor):
@@ -149,215 +145,6 @@ class FundamentalFactor(Factor):
     """
 
     category = "fundamental"
-
-
-class FactorCalculator:
-    """
-    因子计算器
-
-    提供常用的因子计算辅助函数
-    """
-
-    @staticmethod
-    def sma(series: pd.Series, window: int) -> pd.Series:
-        """
-        简单移动平均
-
-        Args:
-            series: 价格序列
-            window: 窗口大小
-
-        Returns:
-            移动平均序列
-        """
-        return series.rolling(window=window).mean()
-
-    @staticmethod
-    def ema(series: pd.Series, window: int) -> pd.Series:
-        """
-        指数移动平均
-
-        Args:
-            series: 价格序列
-            window: 窗口大小
-
-        Returns:
-            指数移动平均序列
-        """
-        return series.ewm(span=window, adjust=False).mean()
-
-    @staticmethod
-    def std(series: pd.Series, window: int) -> pd.Series:
-        """
-        滚动标准差
-
-        Args:
-            series: 价格序列
-            window: 窗口大小
-
-        Returns:
-            标准差序列
-        """
-        return series.rolling(window=window).std()
-
-    @staticmethod
-    def rank(series: pd.Series) -> pd.Series:
-        """
-        排序（百分位）
-
-        Args:
-            series: 数据序列
-
-        Returns:
-            排序后的序列（0-1之间）
-        """
-        return series.rank(pct=True)
-
-    @staticmethod
-    def zscore(series: pd.Series) -> pd.Series:
-        """
-        Z-score标准化
-
-        Args:
-            series: 数据序列
-
-        Returns:
-            标准化后的序列（均值0，标准差1）
-        """
-        return (series - series.mean()) / series.std()
-
-    @staticmethod
-    def delta(series: pd.Series, periods: int = 1) -> pd.Series:
-        """
-        差分
-
-        Args:
-            series: 数据序列
-            periods: 周期
-
-        Returns:
-            差分序列
-        """
-        return series.diff(periods)
-
-    @staticmethod
-    def ts_rank(series: pd.Series, window: int) -> pd.Series:
-        """
-        时间序列排序
-
-        Args:
-            series: 数据序列
-            window: 窗口大小
-
-        Returns:
-            滚动排序序列
-        """
-        return series.rolling(window=window).apply(
-            lambda x: x.rank(pct=True).iloc[-1]
-        )
-
-    @staticmethod
-    def ts_max(series: pd.Series, window: int) -> pd.Series:
-        """
-        时间序列最大值
-
-        Args:
-            series: 数据序列
-            window: 窗口大小
-
-        Returns:
-            滚动最大值序列
-        """
-        return series.rolling(window=window).max()
-
-    @staticmethod
-    def ts_min(series: pd.Series, window: int) -> pd.Series:
-        """
-        时间序列最小值
-
-        Args:
-            series: 数据序列
-            window: 窗口大小
-
-        Returns:
-            滚动最小值序列
-        """
-        return series.rolling(window=window).min()
-
-    @staticmethod
-    def ts_argmax(series: pd.Series, window: int) -> pd.Series:
-        """
-        时间序列最大值位置
-
-        Args:
-            series: 数据序列
-            window: 窗口大小
-
-        Returns:
-            最大值位置序列
-        """
-        return series.rolling(window=window).apply(
-            lambda x: x.argmax(), raw=False
-        )
-
-    @staticmethod
-    def ts_argmin(series: pd.Series, window: int) -> pd.Series:
-        """
-        时间序列最小值位置
-
-        Args:
-            series: 数据序列
-            window: 窗口大小
-
-        Returns:
-            最小值位置序列
-        """
-        return series.rolling(window=window).apply(
-            lambda x: x.argmin(), raw=False
-        )
-
-    @staticmethod
-    def correlation(s1: pd.Series, s2: pd.Series, window: int) -> pd.Series:
-        """
-        滚动相关系数
-
-        Args:
-            s1: 序列1
-            s2: 序列2
-            window: 窗口大小
-
-        Returns:
-            相关系数序列
-        """
-        return s1.rolling(window=window).corr(s2)
-
-    @staticmethod
-    def covariance(s1: pd.Series, s2: pd.Series, window: int) -> pd.Series:
-        """
-        滚动协方差
-
-        Args:
-            s1: 序列1
-            s2: 序列2
-            window: 窗口大小
-
-        Returns:
-            协方差序列
-        """
-        return s1.rolling(window=window).cov(s2)
-
-    @staticmethod
-    def decile(series: pd.Series) -> pd.Series:
-        """
-        十分位分组
-
-        Args:
-            series: 数据序列
-
-        Returns:
-            十分位分组序列（1-10）
-        """
-        return pd.qcut(series, q=10, labels=False, duplicates="drop") + 1
 
 
 class FactorValidator:

@@ -6,26 +6,18 @@ data:
   data_dir: "data"
   cache_dir: "cache"
 
-  # 主要数据源: tushare, akshare, baostock
+  # 主要数据源: tushare, akshare, wind
   primary_provider: "wind"
 
   # Tushare配置（需要在.env文件中设置TUSHARE_TOKEN）
   # 获取token: https://tushare.pro/register
-  tushare_pro_api: "http://api.tushare.pro"
 
   # AKShare配置
   akshare_enabled: true
 
-  # Baostock配置
-  baostock_enabled: true
-
   # 缓存配置
   enable_cache: true
   cache_days: 7
-
-  # 自动更新配置
-  auto_update: false
-  update_time: "18:00"
 
   # 存储格式: hdf5 或 parquet
   storage_format: "hdf5"
@@ -34,10 +26,6 @@ data:
 factor:
   # 因子目录
   factor_dir: "factors"
-
-  # 并行计算配置
-  parallel: true
-  n_workers: -1  # -1表示使用所有CPU核心
 
   # 因子数据库路径
   factor_db_path: "storage/factors.h5"

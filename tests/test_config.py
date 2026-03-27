@@ -38,8 +38,6 @@ def test_settings():
 
     # 测试3: 配置信息
     print("\n[测试3] 配置详情...")
-    print(f"✓ 因子并行计算: {settings.factor.parallel}")
-    print(f"✓ 工作进程数: {settings.factor.n_workers}")
     print(f"✓ 回测初始资金: {settings.backtest.initial_capital:,.0f}元")
     print(f"✓ 手续费率: {settings.backtest.commission_rate:.4f}")
     print(f"✓ 滑点率: {settings.backtest.slippage_rate:.4f}")

@@ -35,7 +35,7 @@ def test_data_source():
 
             # 获取单只股票数据
             print("\n  获取单只股票日线数据...")
-            ts_code = "000001.SZ"  # 平安银行
+            ts_code = "sz000001"  # 平安银行（使用 internal_id 格式）
             data = source.get_daily_data(
                 ts_code=ts_code,
                 start_date="2024-01-01",
@@ -90,7 +90,7 @@ def test_data_source():
 
                 # 获取单只股票数据
                 print("\n  获取单只股票日线数据...")
-                ts_code = "000001.SZ"
+                ts_code = "sz000001"  # 使用 internal_id 格式
                 data = source.get_daily_data(
                     ts_code=ts_code,
                     start_date="2024-01-01",
@@ -149,7 +149,7 @@ def test_data_source():
 
                 # 获取单只股票数据
                 print("\n  获取单只股票日线数据...")
-                ts_code = "000001.SZ"
+                ts_code = "sz000001"  # 使用 internal_id 格式
                 data = source.get_daily_data(
                     ts_code=ts_code,
                     start_date="2024-01-01",
@@ -166,7 +166,7 @@ def test_data_source():
                 # 获取指数数据
                 print("\n  获取指数数据...")
                 index_data = source.get_index_data(
-                    index_code="000300.SH",
+                    index_code="sh000300",  # 使用 internal_id 格式
                     start_date="2024-01-01",
                     end_date="2024-03-15"
                 )

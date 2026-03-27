@@ -32,7 +32,6 @@ def example_1_config():
     print(f"  缓存目录: {settings.get_cache_path()}")
     print(f"  主要数据源: {settings.data.primary_provider}")
     print(f"  存储格式: {settings.data.storage_format}")
-    print(f"  因子并行计算: {settings.factor.parallel}")
     print(f"  回测初始资金: ¥{settings.backtest.initial_capital:,.0f}")
     print(f"  Wind数据源启用: {settings.data.wind_enabled}")
 
@@ -89,8 +88,6 @@ def example_3_factor_registry():
     if info:
         print(f"  名称: {info['name']}")
         print(f"  描述: {info['description']}")
-        print(f"  作者: {info['author']}")
-        print(f"  版本: {info['version']}")
         print(f"  参数: {info['params']}")
 
     # 检查因子是否存在
@@ -397,7 +394,7 @@ def example_9_wind_source():
 
         # 获取单只股票日线数据
         print("\n[步骤3] 获取单只股票日线数据...")
-        ts_code = "000001.SZ"  # 平安银行
+        ts_code = "sz000001"  # 平安银行（使用 internal_id 格式）
         print(f"  获取股票: {ts_code}")
 
         data = source.get_daily_data(
@@ -416,7 +413,7 @@ def example_9_wind_source():
 
         # 批量获取多只股票数据
         print("\n[步骤4] 批量获取多只股票数据...")
-        codes = ["000001.SZ", "000002.SZ", "600000.SH"]
+        codes = ["sz000001", "sz000002", "sh600000"]  # 使用 internal_id 格式
         print(f"  获取股票: {codes}")
 
         batch_data = source.get_daily_data_batch(
@@ -471,7 +468,7 @@ def example_10_akshare_source():
 
             # 获取单只股票数据
             print("\n📈 获取股票数据...")
-            ts_code = "000001.SZ"
+            ts_code = "sz000001"  # 使用 internal_id 格式
             print(f"  正在获取 {ts_code} 的数据...")
 
             data = source.get_daily_data(

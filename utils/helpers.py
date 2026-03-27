@@ -63,6 +63,80 @@ def remove_suffix(code: str) -> str:
     return code.split(".")[0]
 
 
+def to_internal_id(code: str) -> str:
+    """
+    将股票代码转换为 internal_id 格式
+
+    internal_id 格式：{exchange}{code}，全部小写，无点号
+    例如：000001.SZ → sz000001, 600519.SH → sh600519
+
+    Args:
+        code: 股票代码（支持 external_id 格式如 000001.SZ，或纯代码如 000001）
+
+    Returns:
+        internal_id 格式的股票代码（如：sz000001）
+    """
+    code = code.strip().upper()
+
+    # 如果已经是 internal_id 格式（小写字母开头）
+    if code[0].islower():
+        return code.lower()
+
+    # 移除可能的点号，提取交易所和代码
+    if "." in code:
+        parts = code.split(".")
+        stock_code = parts[0]
+        exchange = parts[1].lower()
+    else:
+        stock_code = code
+        # 根据代码规则推断交易所
+        if code.startswith("6") or code.startswith("5"):
+            exchange = "sh"
+        elif code.startswith("0") or code.startswith("3") or code.startswith("8"):
+            exchange = "sz"
+        elif code.startswith("4") or code.startswith("8"):
+            exchange = "bj"
+        else:
+            # 无法推断，返回原代码
+            return code.lower()
+
+    return f"{exchange}{stock_code}"
+
+
+def to_external_id(code: str) -> str:
+    """
+    将股票代码转换为 external_id 格式（与数据源一致）
+
+    external_id 格式：{code}.{exchange}，全部大写
+    例如：sz000001 → 000001.SZ, sh600519 → 600519.SH
+
+    Args:
+        code: 股票代码（支持 internal_id 格式如 sz000001，或纯代码如 000001）
+
+    Returns:
+        external_id 格式的股票代码（如：000001.SZ）
+    """
+    code = code.strip()
+
+    # 如果已经是 external_id 格式（包含点号）
+    if "." in code:
+        return code.upper()
+
+    # 如果是 internal_id 格式（小写字母开头）
+    if code[0].islower():
+        exchange = code[:2].upper()
+        stock_code = code[2:]
+        return f"{stock_code}.{exchange}"
+
+    # 纯代码，添加交易所后缀
+    if code.startswith("6") or code.startswith("5"):
+        return f"{code}.SH"
+    elif code.startswith("0") or code.startswith("3") or code.startswith("8"):
+        return f"{code}.SZ"
+    else:
+        return code.upper()
+
+
 def parse_date(date_input: Union[str, pd.Timestamp, np.datetime64]) -> str:
     """
     解析并标准化日期格式为YYYY-MM-DD

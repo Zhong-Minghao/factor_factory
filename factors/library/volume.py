@@ -5,7 +5,7 @@
 import pandas as pd
 import numpy as np
 
-from ..base import VolumeFactor, FactorCalculator
+from ..base import VolumeFactor
 from ..registry import register_factor
 
 
@@ -15,8 +15,6 @@ class VolumeRatio(VolumeFactor):
 
     name = "VOLUME_RATIO"
     description = "量比（当前成交量/过去N日平均成交量）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 5}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -38,8 +36,6 @@ class VolumeMA(VolumeFactor):
 
     name = "VOLUME_MA"
     description = "成交量移动平均"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -61,8 +57,6 @@ class Turnover(VolumeFactor):
 
     name = "TURNOVER"
     description = "换手率（需要流通股本数据）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -87,8 +81,6 @@ class VPrice(VolumeFactor):
 
     name = "VPRICE"
     description = "量价配合度（价格上涨时的成交量占比）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -119,8 +111,6 @@ class Volatility(VolumeFactor):
 
     name = "VOLATILITY"
     description = "成交量波动率"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -142,8 +132,6 @@ class NetFlow(VolumeFactor):
 
     name = "NET_FLOW"
     description = "资金净流入（基于价格变化和成交量的代理指标）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 5}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -175,8 +163,6 @@ class VolumeTrend(VolumeFactor):
 
     name = "VOLUME_TREND"
     description = "成交量变化趋势"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"short_window": 5, "long_window": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -200,8 +186,6 @@ class PriceVolumeTrend(VolumeFactor):
 
     name = "PRICE_VOLUME_TREND"
     description = "价量趋势（PVT）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -221,8 +205,6 @@ class VolumeOscillator(VolumeFactor):
 
     name = "VOLUME_OSCILLATOR"
     description = "成交量震荡指标"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"fast_window": 5, "slow_window": 10}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:

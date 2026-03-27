@@ -91,7 +91,10 @@ class WindSource(DataSourceBase):
                 )
 
             # 测试连接 - 获取一个简单的数据
-            test_data = self.api.wsd("000001.SZ", "close", "2024-01-02", "2024-01-02")
+            # Wind API 需要 external_id 格式
+            from factor_factory.utils.helpers import to_external_id
+            test_code = to_external_id("sz000001")
+            test_data = self.api.wsd(test_code, "close", "2024-01-02", "2024-01-02")
 
             if test_data.ErrorCode != 0:
                 raise DataSourceConnectionError("Wind连接测试失败")

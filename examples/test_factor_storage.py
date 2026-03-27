@@ -31,8 +31,8 @@ def create_test_factor_data(
     # 生成日期序列
     dates = pd.date_range(start=start_date, periods=num_days, freq="D")
 
-    # 生成股票代码
-    stock_codes = [f"{str(i).zfill(6)}.SZ" for i in range(1, num_stocks + 1)]
+    # 生成股票代码（使用 internal_id 格式：{exchange}{code}）
+    stock_codes = [f"sz{str(i).zfill(6)}" for i in range(1, num_stocks + 1)]
  
     # 生成随机因子值
     np.random.seed(42)
@@ -171,7 +171,7 @@ def test_factor_engine_integration():
 
     # 筛选股票
     print("\n📈 筛选股票代码...")
-    stock_codes = ["000001.SZ", "000002.SZ", "000003.SZ"]
+    stock_codes = ["sz000001", "sz000002", "sz000003"]
     filtered_data = engine.load_factor_values(
         factor_name="MACD",
         params={"fast": 12, "slow": 26, "signal": 9},
@@ -196,8 +196,6 @@ def test_metadata():
         factor_name="TEST_FACTOR",
         category="technical",
         description="测试因子",
-        author="Test User",
-        version="1.0.0",
         params={"window": 20, "threshold": 0.5},
     )
     print(f"  ✓ 元数据创建成功")

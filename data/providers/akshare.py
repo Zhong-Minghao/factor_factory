@@ -76,49 +76,30 @@ class AKShareSource(DataSourceBase):
 
     def _standardize_code(self, code: str) -> str:
         """
-        标准化股票代码格式
+        标准化股票代码为 internal_id 格式
 
         Args:
-            code: 股票代码
+            code: 股票代码（支持任何格式）
 
         Returns:
-            标准化后的代码
+            internal_id 格式的代码 (如：sz000001)
         """
-        code = code.strip().upper()
-
-        # AKShare使用的格式：sh600000, sz000001
-        # 我们需要转换为标准格式：600000.SH, 000001.SZ
-        if not "." in code:
-            # 如果已经是AKShare格式，转换
-            if code.startswith("sh"):
-                return code[2:] + ".SH"
-            elif code.startswith("sz"):
-                return code[2:] + ".SZ"
-            else:
-                # 如果是纯数字，根据规则添加后缀
-                if code.startswith("6") or code.startswith("5"):
-                    return code + ".SH"
-                else:
-                    return code + ".SZ"
-
-        return code
+        from factor_factory.utils.helpers import to_internal_id
+        return to_internal_id(code)
 
     def _convert_to_akshare_format(self, code: str) -> str:
         """
         转换为AKShare格式的股票代码
 
         Args:
-            code: 标准格式的股票代码 (如：000001.SZ)
+            code: internal_id 格式的股票代码 (如：sz000001)
 
         Returns:
             AKShare格式的代码 (如：sz000001)
+            注意：AKShare格式与 internal_id 格式相同，无需转换
         """
-        code = code.split(".")[0]
-
-        if code.startswith("6") or code.startswith("5"):
-            return "sh" + code
-        else:
-            return "sz" + code
+        # AKShare 格式与 internal_id 格式一致
+        return code.lower()
 
     def get_stock_list(self) -> pd.DataFrame:
         """

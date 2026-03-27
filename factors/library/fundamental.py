@@ -15,8 +15,6 @@ class PE(FundamentalFactor):
 
     name = "PE"
     description = "市盈率（TTM）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -39,8 +37,6 @@ class PB(FundamentalFactor):
 
     name = "PB"
     description = "市净率"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -57,8 +53,6 @@ class PS(FundamentalFactor):
 
     name = "PS"
     description = "市销率（TTM）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -78,8 +72,6 @@ class MarketCap(FundamentalFactor):
 
     name = "MARKET_CAP"
     description = "总市值"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -96,8 +88,6 @@ class CirculatingCap(FundamentalFactor):
 
     name = "CIRCULATING_CAP"
     description = "流通市值"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -114,8 +104,6 @@ class EP(FundamentalFactor):
 
     name = "EP"
     description = "盈利收益率（EP = 1/PE）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -136,8 +124,6 @@ class BP(FundamentalFactor):
 
     name = "BP"
     description = "账面市值比（BP = 1/PB）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -158,8 +144,6 @@ class LogMarketCap(FundamentalFactor):
 
     name = "LOG_MARKET_CAP"
     description = "总市值的自然对数"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:

@@ -5,7 +5,7 @@
 import pandas as pd
 import numpy as np
 
-from ..base import MomentumFactor, FactorCalculator
+from ..base import MomentumFactor
 from ..registry import register_factor
 
 
@@ -15,8 +15,6 @@ class Return(MomentumFactor):
 
     name = "RETURN"
     description = "N日收益率"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"period": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -31,8 +29,6 @@ class MOM(MomentumFactor):
 
     name = "MOM"
     description = "N日动量（价格变化）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"period": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -47,8 +43,6 @@ class Acceleration(MomentumFactor):
 
     name = "ACCELERATION"
     description = "价格加速度（二阶导数）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"short_period": 5, "long_period": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -72,8 +66,6 @@ class RSQ(MomentumFactor):
 
     name = "RSQ"
     description = "R平方，衡量价格趋势的强度"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -111,8 +103,6 @@ class MaxReturn(MomentumFactor):
 
     name = "MAX_RETURN"
     description = "N日内最大收益率"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -134,8 +124,6 @@ class DownsideRisk(MomentumFactor):
 
     name = "DOWNSIDE_RISK"
     description = "下行波动率（只考虑下跌）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -160,8 +148,6 @@ class UpsidePotential(MomentumFactor):
 
     name = "UPSIDE_POTENTIAL"
     description = "上行收益率（只考虑上涨）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -186,8 +172,6 @@ class RateOfChange(MomentumFactor):
 
     name = "RATE_OF_CHANGE"
     description = "N日变化率（ROC）"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"period": 10}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -210,8 +194,6 @@ class WilliamsR(MomentumFactor):
 
     name = "WILLIAMS_R"
     description = "威廉指标%R"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 14}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:

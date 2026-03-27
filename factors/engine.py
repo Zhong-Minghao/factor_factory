@@ -5,7 +5,6 @@
 from typing import Dict, List, Optional, Union, Any
 import pandas as pd
 import numpy as np
-from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 import warnings
 
@@ -44,10 +43,6 @@ class FactorEngine:
         self.storage = storage or DataStore()
         self.factor_store = factor_store or FactorStore()
         self.validator = FactorValidator()
-
-        # 计算配置
-        self.parallel = self.settings.factor.parallel
-        self.n_workers = self.settings.factor.n_workers
 
     def compute_factor(
         self,
@@ -96,7 +91,6 @@ class FactorEngine:
         self,
         factor_names: List[str],
         data: pd.DataFrame,
-        parallel: Optional[bool] = None,
     ) -> Dict[str, pd.Series]:
         """
         批量计算多个因子
@@ -104,94 +98,22 @@ class FactorEngine:
         Args:
             factor_names: 因子名称列表
             data: 输入数据
-            parallel: 是否并行计算
-
-        Returns:
-            字典，key为因子名称，value为因子值Series
-        """
-        parallel = parallel if parallel is not None else self.parallel
-
-        result = {}
-
-        if parallel and len(factor_names) > 1:
-            # 并行计算
-            result = self._compute_parallel(factor_names, data)
-        else:
-            # 串行计算
-            for factor_name in factor_names:
-                try:
-                    factor_values = self.compute_factor(factor_name, data)
-                    result[factor_name] = factor_values
-                except Exception as e:
-                    warnings.warn(f"计算因子 {factor_name} 失败: {str(e)}")
-                    continue
-
-        return result
-
-    def _compute_parallel(
-        self, factor_names: List[str], data: pd.DataFrame
-    ) -> Dict[str, pd.Series]:
-        """
-        并行计算因子
-
-        Args:
-            factor_names: 因子名称列表
-            data: 输入数据
 
         Returns:
             字典，key为因子名称，value为因子值Series
         """
         result = {}
 
-        # 确定工作进程数
-        n_workers = self.n_workers if self.n_workers > 0 else None
-
-        with ProcessPoolExecutor(max_workers=n_workers) as executor:
-            # 提交任务
-            futures = {
-                executor.submit(
-                    self._compute_factor_worker,
-                    factor_name,
-                    data
-                ): factor_name
-                for factor_name in factor_names
-            }
-
-            # 收集结果
-            for future in as_completed(futures):
-                factor_name = futures[future]
-                try:
-                    factor_values = future.result()
-                    result[factor_name] = factor_values
-                except Exception as e:
-                    warnings.warn(f"并行计算因子 {factor_name} 失败: {str(e)}")
-                    continue
+        # 串行计算
+        for factor_name in factor_names:
+            try:
+                factor_values = self.compute_factor(factor_name, data)
+                result[factor_name] = factor_values
+            except Exception as e:
+                warnings.warn(f"计算因子 {factor_name} 失败: {str(e)}")
+                continue
 
         return result
-
-    @staticmethod
-    def _compute_factor_worker(factor_name: str, data: pd.DataFrame) -> pd.Series:
-        """
-        工作进程函数（用于并行计算）
-
-        Args:
-            factor_name: 因子名称
-            data: 输入数据
-
-        Returns:
-            因子值Series
-        """
-        # 重新导入因子模块（因为是在新进程中）
-        from factors.registry import factor_registry
-
-        # 获取因子实例
-        factor = factor_registry.get(factor_name)
-
-        if factor is None:
-            raise ValueError(f"因子不存在: {factor_name}")
-
-        # 计算因子值
-        return factor.compute(data)
 
     def compute_factor_for_stocks(
         self,

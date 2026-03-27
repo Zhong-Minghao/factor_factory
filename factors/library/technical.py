@@ -6,7 +6,7 @@ from typing import Optional
 import pandas as pd
 import numpy as np
 
-from ..base import TechnicalFactor, FactorCalculator
+from ..base import TechnicalFactor
 from ..registry import register_factor
 
 
@@ -15,15 +15,12 @@ class MA(TechnicalFactor):
 
     name = "MA"
     description = "简单移动平均线"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 20}  # 默认20日均线
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
         """计算移动平均线"""
         window = self.params.get("window", 20)
-        calculator = FactorCalculator()
-        return calculator.sma(data["close"], window)
+        return data["close"].rolling(window=window).mean()
 
 
 @register_factor("EMA")
@@ -32,15 +29,12 @@ class EMA(TechnicalFactor):
 
     name = "EMA"
     description = "指数移动平均线"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
         """计算指数移动平均线"""
         window = self.params.get("window", 20)
-        calculator = FactorCalculator()
-        return calculator.ema(data["close"], window)
+        return data["close"].ewm(span=window, adjust=False).mean()
 
 
 @register_factor("MACD")
@@ -49,8 +43,6 @@ class MACD(TechnicalFactor):
 
     name = "MACD"
     description = "指数平滑异同移动平均线"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {
         "fast": 12,
         "slow": 26,
@@ -63,17 +55,15 @@ class MACD(TechnicalFactor):
         slow = self.params.get("slow", 26)
         signal = self.params.get("signal", 9)
 
-        calculator = FactorCalculator()
-
         # 计算快速和慢速EMA
-        ema_fast = calculator.ema(data["close"], fast)
-        ema_slow = calculator.ema(data["close"], slow)
+        ema_fast = data["close"].ewm(span=fast, adjust=False).mean()
+        ema_slow = data["close"].ewm(span=slow, adjust=False).mean()
 
         # DIF线
         dif = ema_fast - ema_slow
 
         # DEA线（信号线）
-        dea = calculator.ema(dif, signal)
+        dea = dif.ewm(span=signal, adjust=False).mean()
 
         # MACD柱
         macd = (dif - dea) * 2
@@ -87,8 +77,6 @@ class RSI(TechnicalFactor):
 
     name = "RSI"
     description = "相对强弱指标"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 14}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -119,8 +107,6 @@ class BOLL(TechnicalFactor):
 
     name = "BOLL"
     description = "布林带"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 20, "num_std": 2}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -128,13 +114,11 @@ class BOLL(TechnicalFactor):
         window = self.params.get("window", 20)
         num_std = self.params.get("num_std", 2)
 
-        calculator = FactorCalculator()
-
         # 计算中轨（移动平均）
-        middle = calculator.sma(data["close"], window)
+        middle = data["close"].rolling(window=window).mean()
 
         # 计算标准差
-        std = calculator.std(data["close"], window)
+        std = data["close"].rolling(window=window).std()
 
         # 计算上下轨
         upper = middle + num_std * std
@@ -152,8 +136,6 @@ class ATR(TechnicalFactor):
 
     name = "ATR"
     description = "平均真实波幅"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 14}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -179,8 +161,6 @@ class KDJ(TechnicalFactor):
 
     name = "KDJ"
     description = "随机指标KDJ"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"n": 9, "m1": 3, "m2": 3}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -212,8 +192,6 @@ class CCI(TechnicalFactor):
 
     name = "CCI"
     description = "顺势指标"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {"window": 20}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:
@@ -243,8 +221,6 @@ class OBV(TechnicalFactor):
 
     name = "OBV"
     description = "能量潮"
-    author = "Factor Factory"
-    version = "1.0.0"
     params = {}
 
     def compute(self, data: pd.DataFrame) -> pd.Series:

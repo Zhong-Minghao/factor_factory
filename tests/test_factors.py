@@ -155,7 +155,7 @@ def test_factor_engine():
     print("\n[测试2] 批量因子计算...")
     try:
         factor_names = ["MA", "RETURN", "VOLUME_RATIO", "RSI"]
-        results = engine.compute_factors_batch(factor_names, data, parallel=False)
+        results = engine.compute_factors_batch(factor_names, data)
 
         print(f"  ✓ 成功计算 {len(results)} 个因子")
         for name, values in results.items():

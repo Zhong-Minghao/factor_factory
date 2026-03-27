@@ -147,8 +147,6 @@ class FactorStore:
             factor_name=factor_name,
             category="unknown",  # 未知类别
             description=f"Factor {factor_key}",
-            author="unknown",
-            version="1.0.0",
             params=params,
         )
 
@@ -198,14 +196,11 @@ class FactorStore:
                 factor_name=factor_name,
                 category="custom",  # 默认类别
                 description=f"Factor {factor_key}",
-                author="user",
-                version="1.0.0",
                 params=params or {},
             )
 
-        # 更新元数据的统计信息和时间
+        # 更新元数据的统计信息
         metadata.update_statistics(factor_data)
-        metadata.updated_at = datetime.now().isoformat()
 
         # 保存到HDF5
         hdf5_path = self._get_hdf5_path()

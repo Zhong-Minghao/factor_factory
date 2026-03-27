@@ -25,27 +25,17 @@ class DataConfig:
 
     # Tushare配置
     tushare_token: Optional[str] = None
-    tushare_pro_api: str = "http://api.tushare.pro"
 
     # AKShare配置
     akshare_enabled: bool = True
 
-    # Baostock配置
-    baostock_enabled: bool = True
-
     # Wind配置
     wind_enabled: bool = True  # 默认开启，需要Wind终端
-    wind_account: Optional[str] = None  # Wind账号（可选）
-    wind_password: Optional[str] = None  # Wind密码（可选）
     wind_server: str = "localhost"  # Wind服务器地址
 
     # 缓存配置
     enable_cache: bool = True
     cache_days: int = 7  # 缓存天数
-
-    # 数据更新配置
-    auto_update: bool = False
-    update_time: str = "18:00"  # 自动更新时间
 
     # 存储格式
     storage_format: str = "hdf5"  # hdf5 or parquet
@@ -56,10 +46,6 @@ class FactorConfig:
     """因子配置"""
     # 因子目录
     factor_dir: str = "factors"
-
-    # 计算配置
-    parallel: bool = True  # 是否并行计算
-    n_workers: int = -1    # 工作进程数，-1表示使用所有CPU核心
 
     # 因子存储
     factor_db_path: str = "storage/factors.h5"
@@ -87,8 +73,8 @@ class BacktestConfig:
     # 报告配置
     report_dir: str = "reports"
 
-    # 基准指数
-    benchmark: str = "000300.SH"  # 沪深300
+    # 基准指数（使用 internal_id 格式）
+    benchmark: str = "sh000300"  # 沪深300
 
 
 @dataclass
