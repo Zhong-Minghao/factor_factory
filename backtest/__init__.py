@@ -15,6 +15,9 @@ from .performance import PerformanceCalculator
 # 回测结果数据类
 from .result import BacktestResult
 
+# HTML 报告生成器
+from .report import FactorReport
+
 __all__ = [
     # 核心引擎
     "VectorBacktest",
@@ -22,4 +25,6 @@ __all__ = [
     "StockSelector",
     "PerformanceCalculator",
     "BacktestResult",
+    # 报告生成
+    "FactorReport",
 ]
