@@ -92,7 +92,7 @@ class WindSource(DataSourceBase):
 
             # 测试连接 - 获取一个简单的数据
             # Wind API 需要 external_id 格式
-            from factor_factory.utils.helpers import to_external_id
+            from utils.helpers import to_external_id
             test_code = to_external_id("sz000001")
             test_data = self.api.wsd(test_code, "close", "2024-01-02", "2024-01-02")
 
@@ -264,12 +264,10 @@ class WindSource(DataSourceBase):
                 "volume": result.Data[4] if len(result.Data) > 4 else [],
                 "amount": result.Data[5] if len(result.Data) > 5 else [],
             })
+            df = df.set_index("trade_date")
 
             # 标准化格式
             df = self.standardize_dataframe(df, date_column="trade_date")
-
-            # 转换日期为字符串格式
-            df["trade_date"] = df["trade_date"].dt.strftime("%Y-%m-%d")
 
             return df
 

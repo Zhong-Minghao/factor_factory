@@ -445,58 +445,6 @@ def example_9_wind_source():
             source.disconnect()
 
 
-def example_10_akshare_source():
-    """示例10: AKShare数据源使用（需要网络连接）"""
-    print("\n" + "=" * 70)
-    print("示例10: AKShare数据源使用（需要网络连接）")
-    print("=" * 70)
-
-    try:
-        from data.providers.akshare import AKShareSource
-
-        print("\n📡 连接AKShare数据源...")
-        source = AKShareSource()
-
-        if source.connect():
-            print("  ✓ 连接成功")
-
-            # 获取股票列表
-            print("\n📋 获取股票列表...")
-            stock_list = source.get_stock_list()
-            print(f"  获取到 {len(stock_list)} 只股票")
-            print(f"  前10只: {stock_list.head(10)['ts_code'].tolist()}")
-
-            # 获取单只股票数据
-            print("\n📈 获取股票数据...")
-            ts_code = "sz000001"  # 使用 internal_id 格式
-            print(f"  正在获取 {ts_code} 的数据...")
-
-            data = source.get_daily_data(
-                ts_code=ts_code,
-                start_date="2024-01-01",
-                end_date="2024-03-15"
-            )
-
-            if not data.empty:
-                print(f"  ✓ 获取到 {len(data)} 条数据")
-                print(f"  日期范围: {data['trade_date'].min()} 到 {data['trade_date'].max()}")
-                print(f"  价格范围: ¥{data['close'].min():.2f} - ¥{data['close'].max():.2f}")
-                print(f"\n  最新5条数据:")
-                print(data[['trade_date', 'open', 'high', 'low', 'close', 'volume']].tail().to_string())
-            else:
-                print("  ✗ 未获取到数据")
-
-            source.disconnect()
-        else:
-            print("  ✗ 连接失败")
-
-    except ImportError as e:
-        print(f"  ✗ 缺少依赖: {e}")
-        print("  请运行: pip install akshare")
-    except Exception as e:
-        print(f"  ✗ 操作失败: {e}")
-
-
 def example_11_wind_calendar_api():
     """示例11: Wind交易日历API测试（需要Wind环境）"""
     print("\n" + "=" * 70)
@@ -580,7 +528,7 @@ def main():
 
         # 取消以下注释以运行数据源示例
         example_9_wind_source()        # 需要Wind环境
-        example_10_akshare_source()    # 需要网络连接
+        # example_10_akshare_source()    # 需要网络连接
         example_11_wind_calendar_api() # 需要Wind环境
 
         print("\n" + "=" * 70)
@@ -613,3 +561,55 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# def example_10_akshare_source():
+#     """示例10: AKShare数据源使用（需要网络连接）"""
+#     print("\n" + "=" * 70)
+#     print("示例10: AKShare数据源使用（需要网络连接）")
+#     print("=" * 70)
+
+#     try:
+#         from data.providers.akshare import AKShareSource
+
+#         print("\n📡 连接AKShare数据源...")
+#         source = AKShareSource()
+
+#         if source.connect():
+#             print("  ✓ 连接成功")
+
+#             # 获取股票列表
+#             print("\n📋 获取股票列表...")
+#             stock_list = source.get_stock_list()
+#             print(f"  获取到 {len(stock_list)} 只股票")
+#             print(f"  前10只: {stock_list.head(10)['ts_code'].tolist()}")
+
+#             # 获取单只股票数据
+#             print("\n📈 获取股票数据...")
+#             ts_code = "sz000001"  # 使用 internal_id 格式
+#             print(f"  正在获取 {ts_code} 的数据...")
+
+#             data = source.get_daily_data(
+#                 ts_code=ts_code,
+#                 start_date="2024-01-01",
+#                 end_date="2024-03-15"
+#             )
+
+#             if not data.empty:
+#                 print(f"  ✓ 获取到 {len(data)} 条数据")
+#                 print(f"  日期范围: {data['trade_date'].min()} 到 {data['trade_date'].max()}")
+#                 print(f"  价格范围: ¥{data['close'].min():.2f} - ¥{data['close'].max():.2f}")
+#                 print(f"\n  最新5条数据:")
+#                 print(data[['trade_date', 'open', 'high', 'low', 'close', 'volume']].tail().to_string())
+#             else:
+#                 print("  ✗ 未获取到数据")
+
+#             source.disconnect()
+#         else:
+#             print("  ✗ 连接失败")
+
+#     except ImportError as e:
+#         print(f"  ✗ 缺少依赖: {e}")
+#         print("  请运行: pip install akshare")
+#     except Exception as e:
+#         print(f"  ✗ 操作失败: {e}")

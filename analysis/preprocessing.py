@@ -41,8 +41,9 @@ def mad_outlier_treatment(
     result = factor_values.copy()
 
     # 对每个日期（每一行）分别处理
-    for date in result.index:
-        row_data = result.loc[date]
+    for i, date in enumerate(result.index):
+        # 使用整数索引确保总是返回Series
+        row_data = result.iloc[i]
 
         # 计算中位数
         median = row_data.median()
@@ -54,8 +55,8 @@ def mad_outlier_treatment(
         upper = median + n * mad * 1.4826
         lower = median - n * mad * 1.4826
 
-        # 去极值
-        result.loc[date, :] = row_data.clip(lower=lower, upper=upper)
+        # 去极值（使用.values避免索引对齐问题）
+        result.loc[date] = row_data.clip(lower=lower, upper=upper).values
 
     return result
 
@@ -85,8 +86,9 @@ def sigma_outlier_treatment(
     result = factor_values.copy()
 
     # 对每个日期分别处理
-    for date in result.index:
-        row_data = result.loc[date]
+    for i, date in enumerate(result.index):
+        # 使用整数索引确保总是返回Series
+        row_data = result.iloc[i]
 
         # 计算均值和标准差
         mean = row_data.mean()
@@ -96,8 +98,8 @@ def sigma_outlier_treatment(
         upper = mean + n * std
         lower = mean - n * std
 
-        # 去极值
-        result.loc[date, :] = row_data.clip(lower=lower, upper=upper)
+        # 去极值（使用.values避免索引对齐问题）
+        result.loc[date] = row_data.clip(lower=lower, upper=upper).values
 
     return result
 
@@ -121,15 +123,16 @@ def quantile_outlier_treatment(
     result = factor_values.copy()
 
     # 对每个日期分别处理
-    for date in result.index:
-        row_data = result.loc[date]
+    for i, date in enumerate(result.index):
+        # 使用整数索引确保总是返回Series
+        row_data = result.iloc[i]
 
         # 计算分位数
         lower = row_data.quantile(lower_quantile)
         upper = row_data.quantile(upper_quantile)
 
-        # 去极值
-        result.loc[date, :] = row_data.clip(lower=lower, upper=upper)
+        # 去极值（使用.values避免索引对齐问题）
+        result.loc[date] = row_data.clip(lower=lower, upper=upper).values
 
     return result
 
@@ -155,8 +158,9 @@ def zscore_standardization(
     result = factor_values.copy()
 
     # 对每个日期分别处理（截面标准化）
-    for date in result.index:
-        row_data = result.loc[date]
+    for i, date in enumerate(result.index):
+        # 使用整数索引确保总是返回Series
+        row_data = result.iloc[i]
 
         # 计算均值和标准差
         mean = row_data.mean()
@@ -164,9 +168,9 @@ def zscore_standardization(
 
         # 避免除以0
         if std == 0 or pd.isna(std):
-            result.loc[date, :] = 0
+            result.loc[date] = 0
         else:
-            result.loc[date, :] = (row_data - mean) / std
+            result.loc[date] = ((row_data - mean) / std).values
 
     return result
 
@@ -191,14 +195,15 @@ def rank_standardization(
     result = factor_values.copy()
 
     # 对每个日期分别处理
-    for date in result.index:
-        row_data = result.loc[date]
+    for i, date in enumerate(result.index):
+        # 使用整数索引确保总是返回Series
+        row_data = result.iloc[i]
 
         # 计算排名（百分比）
         rank = row_data.rank(pct=True)
 
         # 标准化
-        result.loc[date, :] = (rank - rank.mean()) / rank.std()
+        result.loc[date] = ((rank - rank.mean()) / rank.std()).values
 
     return result
 
@@ -267,6 +272,10 @@ def preprocess_factor(
     Returns:
         预处理后的因子值DataFrame
     """
+    # 处理Series输入：转换为DataFrame以保持兼容性
+    if isinstance(factor_values, pd.Series):
+        factor_values = factor_values.to_frame()
+
     result = factor_values.copy()
 
     # 1. 去极值

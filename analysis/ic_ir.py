@@ -7,9 +7,87 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import warnings
+from numba import jit
 
 from .preprocessing import preprocess_factor
 from utils.calendar import get_calendar
+
+
+@jit(nopython=True)
+def _pearson_correlation_numba(arr1: np.ndarray, arr2: np.ndarray) -> float:
+    """
+    Numba加速的Pearson相关系数计算
+
+    Args:
+        arr1: 数组1
+        arr2: 数组2
+
+    Returns:
+        相关系数，如果无法计算返回nan
+    """
+    n = len(arr1)
+    if n < 3:
+        return np.nan
+
+    # 计算均值
+    mean1 = 0.0
+    mean2 = 0.0
+    for i in range(n):
+        mean1 += arr1[i]
+        mean2 += arr2[i]
+    mean1 /= n
+    mean2 /= n
+
+    # 计算协方差和标准差
+    cov = 0.0
+    var1 = 0.0
+    var2 = 0.0
+
+    for i in range(n):
+        diff1 = arr1[i] - mean1
+        diff2 = arr2[i] - mean2
+        cov += diff1 * diff2
+        var1 += diff1 * diff1
+        var2 += diff2 * diff2
+
+    if var1 == 0.0 or var2 == 0.0:
+        return np.nan
+
+    return cov / np.sqrt(var1 * var2)
+
+
+@jit(nopython=True)
+def _spearman_correlation_numba(arr1: np.ndarray, arr2: np.ndarray) -> float:
+    """
+    Numba加速的Spearman秩相关系数计算
+
+    Args:
+        arr1: 数组1
+        arr2: 数组2
+
+    Returns:
+        秩相关系数，如果无法计算返回nan
+    """
+    n = len(arr1)
+    if n < 3:
+        return np.nan
+
+    # 计算秩（简单排序方法）
+    rank1 = np.empty(n, dtype=np.float64)
+    rank2 = np.empty(n, dtype=np.float64)
+
+    # 对arr1排序并计算秩
+    for i in range(n):
+        rank1[i] = 0.0
+        rank2[i] = 0.0
+        for j in range(n):
+            if arr1[j] < arr1[i]:
+                rank1[i] += 1.0
+            if arr2[j] < arr2[i]:
+                rank2[i] += 1.0
+
+    # 使用Pearson相关系数计算秩相关
+    return _pearson_correlation_numba(rank1, rank2)
 
 
 class ICAnalyzer:
@@ -54,7 +132,7 @@ class ICAnalyzer:
         future_returns: pd.Series,
     ) -> Optional[float]:
         """
-        计算单个时间点的IC
+        计算单个时间点的IC（使用numba加速）
 
         Args:
             factor_values: 因子值Series（截面）
@@ -69,15 +147,139 @@ class ICAnalyzer:
         if len(aligned) < 3:  # 至少需要3个样本
             return None
 
-        # 计算相关系数
+        # 转换为numpy数组以使用numba加速
+        factor_arr = aligned["factor"].values.astype(np.float64)
+        return_arr = aligned["return"].values.astype(np.float64)
+
+        # 使用numba加速的相关系数计算
         if self.ic_type == "pearson":
-            ic, _ = stats.pearsonr(aligned["factor"], aligned["return"])
+            ic = _pearson_correlation_numba(factor_arr, return_arr)
         elif self.ic_type == "rank":
-            ic, _ = stats.spearmanr(aligned["factor"], aligned["return"])
+            ic = _spearman_correlation_numba(factor_arr, return_arr)
         else:
             raise ValueError(f"未知的IC类型: {self.ic_type}")
 
-        return ic
+        return float(ic) if not np.isnan(ic) else None
+
+    def _validate_input_format(
+        self,
+        factor_data: pd.DataFrame,
+        price_data: pd.DataFrame,
+    ) -> None:
+        """
+        验证输入数据格式，提供清晰的错误提示
+
+        Args:
+            factor_data: 因子数据
+            price_data: 价格数据
+
+        Raises:
+            ValueError: 数据格式不符合要求，附带详细的修复建议
+        """
+        errors = []
+
+        # 验证 factor_data
+        if not isinstance(factor_data, pd.DataFrame):
+            errors.append("factor_data 必须是 DataFrame 类型")
+        elif factor_data.empty:
+            errors.append("factor_data 不能为空")
+        else:
+            # 检查是否为长表格式（包含 OHLC 列）
+            if 'close' in factor_data.columns and 'open' in factor_data.columns:
+                errors.append(
+                    "factor_data 是长表格式（包含 open/high/low/close 列），"
+                    "需要宽表格式（index=日期, columns=股票代码）\n"
+                    "参考 examples/test_factor_analysis.py 中的正确格式"
+                )
+
+        # 验证 price_data
+        if not isinstance(price_data, pd.DataFrame):
+            errors.append("price_data 必须是 DataFrame 类型")
+        elif price_data.empty:
+            errors.append("price_data 不能为空")
+        else:
+            # 检查是否为长表格式
+            if 'close' in price_data.columns and 'open' in price_data.columns:
+                errors.append(
+                    "price_data 是长表格式（包含 open/high/low/close 列），"
+                    "需要宽表格式（index=日期, columns=股票代码）\n\n"
+                    "解决方案：\n"
+                    "1. 使用 WindSource.get_daily_data_batch() 获取多只股票数据\n"
+                    "2. 转换为宽表格式：\n"
+                    "   ```python\n"
+                    "   price_list = []\n"
+                    "   for ts_code, df in price_dict.items():\n"
+                    "       df['ts_code'] = ts_code\n"
+                    "       price_list.append(df[['close', 'ts_code']])\n"
+                    "   \n"
+                    "   price_wide = pd.concat(price_list).pivot(\n"
+                    "       index='trade_date',\n"
+                    "       columns='ts_code',\n"
+                    "       values='close'\n"
+                    "   )\n"
+                    "   ```\n"
+                    "3. 参考 examples/test_numba_speedup.py:19-33"
+                )
+            elif price_data.shape[1] < 2:
+                errors.append(
+                    f"price_data 至少需要 2 列（多个股票），当前只有 {price_data.shape[1]} 列"
+                )
+
+        # 检查股票代码是否匹配
+        if (isinstance(factor_data, pd.DataFrame) and
+            isinstance(price_data, pd.DataFrame) and
+            len(errors) == 0):  # 只在基本格式正确时检查
+
+            factor_stocks = set(factor_data.columns)
+            price_stocks = set(price_data.columns)
+            common_stocks = factor_stocks.intersection(price_stocks)
+
+            if len(common_stocks) < min(3, len(factor_stocks)):
+                errors.append(
+                    f"股票代码匹配不足：factor_data 有 {len(factor_stocks)} 只股票，"
+                    f"price_data 有 {len(price_stocks)} 只股票，"
+                    f"共同股票只有 {len(common_stocks)} 只\n"
+                    f"factor_data 股票：{list(factor_stocks)[:5]}...\n"
+                    f"price_data 股票：{list(price_stocks)[:5]}..."
+                )
+
+        # 如果有错误，抛出异常
+        if errors:
+            error_msg = "数据格式验证失败：\n\n" + "\n\n".join(f"❌ {e}" for e in errors)
+            error_msg += "\n\n💡 提示：运行 python check_data_format.py 查看详细的数据格式诊断"
+            raise ValueError(error_msg)
+
+    def _compute_future_returns(
+        self,
+        price_data: pd.DataFrame,
+        period: int
+    ) -> pd.DataFrame:
+        """
+        计算未来收益率（简化版，不依赖交易日历）
+
+        使用 pandas 的 shift 操作，性能更好且更可靠
+
+        Args:
+            price_data: 价格数据（宽表格式）
+            period: 未来周期
+
+        Returns:
+            未来收益率 DataFrame（index=trade_date, columns=ts_code）
+
+        Note:
+            使用 shift(-period) 计算未来价格，最后 period 行会被丢弃
+            这比使用交易日历查询更简单、更快速
+        """
+        # 直接使用 shift 计算未来价格
+        future_prices = price_data.shift(-period)
+
+        # 计算收益率: (future_price - current_price) / current_price
+        future_returns = (future_prices - price_data) / price_data
+
+        # 移除最后 period 行（没有未来收益率的数据）
+        future_returns = future_returns.iloc[:-period]
+
+        return future_returns
 
     def compute_daily_ic(
         self,
@@ -86,7 +288,7 @@ class ICAnalyzer:
         period: int = 5,
     ) -> pd.Series:
         """
-        计算单日IC序列
+        计算单日IC序列（改进版）
 
         Args:
             factor_data: 因子值DataFrame（宽表格式）
@@ -101,8 +303,32 @@ class ICAnalyzer:
 
         Returns:
             IC序列Series，index为日期
+
+        Raises:
+            ValueError: 数据格式不符合要求（附带详细的修复建议）
+
+        Example:
+            >>> from analysis.ic_ir import ICAnalyzer
+            >>> analyzer = ICAnalyzer(ic_type="rank")
+            >>> ic_series = analyzer.compute_daily_ic(factor_data, price_data, period=5)
+            >>> print(f"IC 均值: {ic_series.mean():.4f}")
         """
-        # 预处理因子值
+        # 步骤 1: 数据格式验证（新增）
+        self._validate_input_format(factor_data, price_data)
+
+        # 步骤 2: 数据对齐
+        common_dates = factor_data.index.intersection(price_data.index)
+        if len(common_dates) == 0:
+            raise ValueError(
+                f"因子数据和价格数据没有共同的日期\n"
+                f"factor_data 日期范围: {factor_data.index.min()} ~ {factor_data.index.max()}\n"
+                f"price_data 日期范围: {price_data.index.min()} ~ {price_data.index.max()}"
+            )
+
+        factor_data = factor_data.loc[common_dates]
+        price_data = price_data.loc[common_dates]
+
+        # 步骤 3: 预处理因子值
         if self.preprocess:
             factor_data = preprocess_factor(
                 factor_data,
@@ -110,62 +336,71 @@ class ICAnalyzer:
                 standardize=True,
             )
 
-        ic_series = []
+        # 步骤 4: 计算未来收益率（简化版）
+        future_returns = self._compute_future_returns(price_data, period)
 
-        # 对每个日期计算IC
-        for i, date in enumerate(factor_data.index):
-            # 计算未来收益率需要的交易日
-            future_dates = self._get_future_trading_dates(date, period)
+        # 步骤 5: 对齐日期
+        valid_dates = factor_data.index.intersection(future_returns.index)
 
-            if future_dates is None or len(future_dates) < period:
-                # 没有足够的未来数据
-                continue
-
-            future_date = future_dates[-1]
-
-            # 计算未来收益率
-            if date not in price_data.index or future_date not in price_data.index:
-                continue
-
-            start_price = price_data.loc[date]
-            end_price = price_data.loc[future_date]
-
-            # 计算收益率
-            future_returns = (end_price - start_price) / start_price
-
-            # 获取因子值
-            factor_values = factor_data.loc[date]
-
-            # 计算IC
-            ic = self._compute_single_ic(factor_values, future_returns)
-
-            if ic is not None:
-                ic_series.append({"date": date, "ic": ic})
-
-        if not ic_series:
+        if len(valid_dates) == 0:
+            warnings.warn(
+                f"没有有效的日期可以计算 IC\n"
+                f"factor_data 日期范围: {factor_data.index.min()} ~ {factor_data.index.max()}\n"
+                f"future_returns 日期范围: {future_returns.index.min()} ~ {future_returns.index.max()}\n"
+                f"提示：增加 price_data 的日期范围或减小 period 参数"
+            )
             return pd.Series(dtype=float)
 
-        # 转换为Series
-        result = pd.DataFrame(ic_series).set_index("date")["ic"]
+        factor_subset = factor_data.loc[valid_dates]
+        returns_subset = future_returns.loc[valid_dates]
 
-        return result
+        # 步骤 6: Stack为长格式，准备批量计算
+        factor_long = factor_subset.stack().rename("factor")
+        returns_long = returns_subset.stack().rename("return")
+
+        # 步骤 7: 合并
+        combined = pd.DataFrame({"factor": factor_long, "return": returns_long})
+
+        # 步骤 8: 按日期分组，使用numba加速计算IC
+        def compute_ic_group(group):
+            factor_arr = group["factor"].values.astype(np.float64)
+            return_arr = group["return"].values.astype(np.float64)
+
+            if self.ic_type == "pearson":
+                ic = _pearson_correlation_numba(factor_arr, return_arr)
+            else:  # rank
+                ic = _spearman_correlation_numba(factor_arr, return_arr)
+
+            return ic if not np.isnan(ic) else np.nan
+
+        # 批量计算IC
+        ic_series = combined.groupby(level=0).apply(compute_ic_group)
+
+        # 过滤nan值
+        ic_series = ic_series.dropna()
+
+        return ic_series
 
     def _get_future_trading_dates(
         self,
-        start_date: pd.Timestamp,
+        start_date: Union[pd.Timestamp, str],
         n_days: int,
     ) -> Optional[List[pd.Timestamp]]:
         """
         获取未来N个交易日
 
         Args:
-            start_date: 开始日期
+            start_date: 开始日期（支持Timestamp或字符串）
             n_days: 交易日数量
 
         Returns:
             交易日列表，如果无法获取则返回None
         """
         try:
+            # 确保start_date是Timestamp类型
+            if not isinstance(start_date, pd.Timestamp):
+                start_date = pd.Timestamp(start_date)
+
             # 获取交易日历
             start_str = start_date.strftime("%Y-%m-%d")
             end_str = (start_date + pd.Timedelta(days=n_days * 2)).strftime("%Y-%m-%d")
@@ -174,7 +409,7 @@ class ICAnalyzer:
 
             # 找到start_date之后的所有交易日
             # 将start_date转换为date对象进行比较
-            start_date_obj = start_date.date() if isinstance(start_date, pd.Timestamp) else start_date
+            start_date_obj = start_date.date()
             future_days = [d for d in trading_days if d > start_date_obj]
 
             if len(future_days) < n_days:

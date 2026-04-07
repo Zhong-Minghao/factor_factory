@@ -10,6 +10,7 @@ from datetime import datetime
 
 from config.settings import get_settings
 from .metadata import FactorMetadata, FactorMetadataManager
+from utils.helpers import to_internal_id, to_external_id
 
 
 class FactorStore:
@@ -183,6 +184,10 @@ class FactorStore:
         if factor_data.empty:
             raise ValueError("factor_data不能为空")
 
+        # 转换股票代码为 internal_id 格式（避免 HDF5 NaturalNameWarning）
+        factor_data_to_save = factor_data.copy()
+        factor_data_to_save.columns = [to_internal_id(code) for code in factor_data_to_save.columns]
+
         # 构造因子键
         if params:
             params_str = "_".join(f"{k}_{v}" for k, v in sorted(params.items()))
@@ -199,7 +204,7 @@ class FactorStore:
                 params=params or {},
             )
 
-        # 更新元数据的统计信息
+        # 更新元数据的统计信息（使用原始数据）
         metadata.update_statistics(factor_data)
 
         # 保存到HDF5
@@ -210,10 +215,10 @@ class FactorStore:
             if dataset_key in store and not overwrite:
                 raise ValueError(f"因子 {factor_key} 已存在，设置 overwrite=True 来覆盖")
 
-            # 保存数据
+            # 保存数据（使用转换后的列名）
             store.put(
                 dataset_key,
-                factor_data,
+                factor_data_to_save,
                 format="table",  # 使用表格格式以支持查询
                 data_columns=True,  # 允许列索引
             )
@@ -270,6 +275,9 @@ class FactorStore:
 
                 # 读取数据
                 df = store[dataset_key]
+
+                # 将列名从 internal_id 转换回 external_id
+                df.columns = [to_external_id(code) for code in df.columns]
 
                 # 筛选日期范围
                 if start_date:

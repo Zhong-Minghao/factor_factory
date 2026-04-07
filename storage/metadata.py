@@ -93,9 +93,32 @@ class FactorMetadata:
         self.num_stocks = len(factor_data.columns)
 
         if not factor_data.empty:
-            # 日期范围
-            self.start_date = factor_data.index.min().strftime("%Y-%m-%d")
-            self.end_date = factor_data.index.max().strftime("%Y-%m-%d")
+            # 日期范围（确保索引是DatetimeIndex）
+            min_idx = factor_data.index.min()
+            max_idx = factor_data.index.max()
+
+            # 尝试将索引转换为DatetimeIndex（如果还不是的话）
+            if not isinstance(factor_data.index, pd.DatetimeIndex):
+                try:
+                    factor_data.index = pd.to_datetime(factor_data.index)
+                    min_idx = factor_data.index.min()
+                    max_idx = factor_data.index.max()
+                except Exception:
+                    # 转换失败，使用原值
+                    pass
+
+            # 格式化日期
+            if isinstance(min_idx, pd.Timestamp):
+                self.start_date = min_idx.strftime("%Y-%m-%d")
+                self.end_date = max_idx.strftime("%Y-%m-%d")
+            elif hasattr(min_idx, 'strftime'):
+                # 其他可格式化的对象
+                self.start_date = min_idx.strftime("%Y-%m-%d")
+                self.end_date = max_idx.strftime("%Y-%m-%d")
+            else:
+                # 整数或其他类型，直接转换为字符串
+                self.start_date = str(min_idx)
+                self.end_date = str(max_idx)
 
             # 统计量（计算所有股票的统计）
             values = factor_data.values.flatten()
